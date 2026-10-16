@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111315">
+<title>ARİZİ TRADE</title>
+<style>
+:root{color-scheme:dark;--bg:#111315;--card:#1a1d20;--line:#30353a;--txt:#f3f4f5;--muted:#969fa8;--green:#58d6a0;--red:#ff7b7b;--gold:#d8c07b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:800px;margin:auto;padding:18px 13px 32px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 2px 17px;border-bottom:1px solid var(--line)}.brand{font-size:24px;font-weight:850;letter-spacing:1.4px}.sub{color:var(--muted);font-size:12px;margin-top:5px}.clock{text-align:right;font-variant-numeric:tabular-nums}.time{font-size:18px;font-weight:750}.date{color:var(--muted);font-size:11px;margin-top:4px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:15px 2px}.live{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px}.dot{width:7px;height:7px;border-radius:50%;background:var(--green)}.summary{font-size:12px;color:var(--muted);margin-top:5px}button{border:1px solid #41474e;background:#292e33;color:var(--txt);border-radius:9px;padding:10px 13px;font-weight:700}button:disabled{opacity:.5}
+#signals{display:flex;flex-direction:column;gap:9px}.empty{border:1px solid var(--line);background:var(--card);padding:23px 16px;border-radius:12px;color:var(--muted);line-height:1.65;text-align:center}.sig{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}.sighead{display:flex;align-items:center;justify-content:space-between;gap:8px}.coin{font-weight:800;font-size:16px}.direction{font-weight:850;font-size:12px;border-radius:6px;padding:6px 9px}.LONG{color:var(--green);background:#173a2d}.SHORT{color:var(--red);background:#422125}.WAIT{color:#bdc3ca;background:#2b3035}.price{font-size:20px;font-weight:750;margin:12px 0 10px;font-variant-numeric:tabular-nums}.levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.level{background:#131619;border-radius:8px;padding:9px}.level span{display:block;color:var(--muted);font-size:10px;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px}.level b{font-size:13px;overflow-wrap:anywhere}.meta{display:flex;justify-content:space-between;gap:8px;margin-top:10px;color:var(--muted);font-size:11px}.confidence{color:var(--gold)}.explain{color:#b6bdc4;font-size:12px;line-height:1.5;margin-top:9px}.foot{font-size:11px;line-height:1.65;color:var(--muted);margin-top:18px}.foot strong{color:#c8cdd2}
+</style></head>
+<body><main>
+<header><div><div class="brand">ARİZİ TRADE</div><div class="sub">15 dəqiqəlik siqnallar · canlı texniki analiz</div></div><div class="clock"><div class="time" id="clock">00:00:00</div><div class="date" id="date">—</div></div></header>
+<div class="toolbar"><div><div class="live"><i class="dot"></i><span id="live">Bazara qoşulur…</span></div><div class="summary" id="summary">20 coin analiz edilir</div></div><button id="refresh">Yenilə</button></div>
+<div id="signals"><div class="empty">Canlı bazar məlumatları yüklənir…</div></div>
+
+<div class="section">Keçmiş nəticə · Backtest</div>
+<section class="sig" style="margin-bottom:8px">
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <select id="btCoin" aria-label="Backtest coin" style="flex:1;min-width:125px;background:#292e33;color:#f3f4f5;border:1px solid #41474e;border-radius:9px;padding:10px">
+      <option>BTCUSDT</option><option>ETHUSDT</option><option>BNBUSDT</option><option>SOLUSDT</option><option>XRPUSDT</option><option>DOGEUSDT</option><option>ADAUSDT</option><option>TRXUSDT</option><option>LINKUSDT</option><option>AVAXUSDT</option><option>SUIUSDT</option><option>LTCUSDT</option><option>DOTUSDT</option><option>BCHUSDT</option><option>NEARUSDT</option><option>APTUSDT</option><option>ETCUSDT</option><option>ATOMUSDT</option><option>UNIUSDT</option><option>FILUSDT</option>
+    </select>
+    <select id="btDays" aria-label="Backtest period" style="flex:1;min-width:110px;background:#292e33;color:#f3f4f5;border:1px solid #41474e;border-radius:9px;padding:10px">
+      <option value="30">Son 30 gün</option><option value="90" selected>Son 90 gün</option><option value="180">Son 180 gün</option>
+    </select>
+    <button id="runBacktest">Backtest et</button>
+  </div>
+  <div id="btStatus" class="explain">Coin və müddət seç, sonra “Backtest et” düyməsinə bas.</div>
+  <div id="btResults" style="display:none;margin-top:12px">
+    <div class="levels">
+      <div class="level"><span>Əməliyyat</span><b id="btTrades">—</b></div>
+      <div class="level"><span>Qazanc faizi</span><b id="btWin">—</b></div>
+      <div class="level"><span>Xalis nəticə*</span><b id="btPnl">—</b></div>
+    </div>
+    <div class="explain" id="btMore"></div>
+  </div>
+</section>
+
+<div class="foot"><strong>Bu bir HTML faylıdır:</strong> server və API açarı tələb etmədən Binance-ın açıq bazar məlumatlarını oxuyur. Texniki analiz: 15M giriş, 1H trend, 5M təsdiq, EMA, RSI, MACD, ATR, həcm, dəstək/müqavimət və mümkün olduqda order-book/funding. Xəbər və AI analizi bu tək faylda qoşulu deyil — onlar üçün ayrıca API bağlantısı/server və açar lazımdır. Model balı tarixi qazanma faizi deyil. 99% dəqiqliyə zəmanət yoxdur. Əvvəl demo/paper-trading et; proqram avtomatik əməliyyat açmır.</div>
+</main>
+<script>
+const COINS=['BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','XRPUSDT','DOGEUSDT','ADAUSDT','TRXUSDT','LINKUSDT','AVAXUSDT','SUIUSDT','LTCUSDT','DOTUSDT','BCHUSDT','NEARUSDT','APTUSDT','ETCUSDT','ATOMUSDT','UNIUSDT','FILUSDT'];
+const $=id=>document.getElementById(id);
+function tick(){const d=new Date();$('clock').textContent=d.toLocaleTimeString('en-GB');$('date').textContent=d.toLocaleDateString('az-AZ',{day:'2-digit',month:'short',year:'numeric'})}tick();setInterval(tick,250);
+function fmt(n){if(n==null||!Number.isFinite(Number(n)))return '—';n=Number(n);return n.toLocaleString('en-US',{maximumFractionDigits:n<1?6:n<100?4:2})}
+async function get(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error('API '+r.status);return r.json()}
+function ema(a,p){let k=2/(p+1),v=a[0];for(let i=1;i<a.length;i++)v=a[i]*k+v*(1-k);return v}
+function rsi(a,p=14){let g=0,l=0;for(let i=a.length-p;i<a.length;i++){const d=a[i]-a[i-1];if(d>0)g+=d;else l-=d}return l===0?100:100-100/(1+g/l)}
+function atr(rows,p=14){const t=[];for(let i=1;i<rows.length;i++){const h=+rows[i][2],lo=+rows[i][3],pc=+rows[i-1][4];t.push(Math.max(h-lo,Math.abs(h-pc),Math.abs(lo-pc)))}return t.slice(-p).reduce((a,b)=>a+b,0)/Math.min(p,t.length)}
+function macd(a){return ema(a.slice(-60),12)-ema(a.slice(-60),26)}
+function stats(raw){const rows=raw.slice(0,-1),c=rows.map(x=>+x[4]),v=rows.map(x=>+x[5]),last=c.at(-1),e20=ema(c.slice(-60),20),e50=ema(c.slice(-80),50),rv=rsi(c),m=macd(c),a=atr(rows),volAvg=v.slice(-21,-1).reduce((s,n)=>s+n,0)/20,vr=v.at(-1)/Math.max(volAvg,1e-12),recent=rows.slice(-20),support=Math.min(...recent.map(x=>+x[3])),resistance=Math.max(...recent.map(x=>+x[2]));return{last,e20,e50,rv,m,a,vr,support,resistance}}
+async function analyze(symbol){
+ const [r15,r1h,r5,book,funding]=await Promise.all([
+  get(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=100`),
+  get(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=100`),
+  get(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=5m&limit=80`),
+  get(`https://api.binance.com/api/v3/depth?symbol=${symbol}&limit=20`).catch(()=>null),
+  get(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${symbol}`).catch(()=>null)
+ ]);
+ const x=stats(r15),h=stats(r1h),m5=stats(r5);let L=0,S=0,notes=[];
+ if(h.e20>h.e50){L+=2;notes.push('1H trend yuxarı')}else if(h.e20<h.e50){S+=2;notes.push('1H trend aşağı')}
+ if(x.e20>x.e50)L+=2;else S+=2;
+ if(x.last>x.e20)L++;else S++;
+ if(x.m>0)L++;else S++;
+ if(x.rv>=52&&x.rv<=68)L++;if(x.rv<=48&&x.rv>=32)S++;
+ if(x.vr>=1.1){if(x.last>x.e20)L++;else S++;notes.push('həcm artımı')}
+ if(m5.e20>m5.e50&&m5.last>m5.e20)L++;if(m5.e20<m5.e50&&m5.last<m5.e20)S++;
+ if(book?.bids?.length&&book?.asks?.length){const b=book.bids.slice(0,10).reduce((s,r)=>s+ +r[1],0),a=book.asks.slice(0,10).reduce((s,r)=>s+ +r[1],0),imb=b/(a+b);if(imb>.58)L++;else if(imb<.42)S++}
+ const fr=Number(funding?.lastFundingRate);if(Number.isFinite(fr)){if(fr>.001)S+=.5;else if(fr<-.001)L+=.5}
+ let side='WAIT',score=0,entry=null,stopLoss=null,takeProfit=null,reason='Şərtlər kifayət qədər uyğun deyil — gözlə.';
+ if(L>=7&&L-S>=3&&x.rv<70&&m5.e20>m5.e50){side='LONG';score=Math.min(95,Math.round(50+L*4+(L-S)*3));entry=x.last;stopLoss=Math.min(x.last-x.a*1.5,x.support-x.a*.15);takeProfit=x.last+Math.max(x.a*2.2,(entry-stopLoss)*1.8);reason=notes.concat(['5M təsdiq var','risk/gəlir təxmini 1:1.8']).join(' · ')}
+ else if(S>=7&&S-L>=3&&x.rv>30&&m5.e20<m5.e50){side='SHORT';score=Math.min(95,Math.round(50+S*4+(S-L)*3));entry=x.last;stopLoss=Math.max(x.last+x.a*1.5,x.resistance+x.a*.15);takeProfit=x.last-Math.max(x.a*2.2,(stopLoss-entry)*1.8);reason=notes.concat(['5M təsdiq var','risk/gəlir təxmini 1:1.8']).join(' · ')}
+ if(side==='LONG'&&x.resistance-x.last<x.a*.65){side='WAIT';score=0;entry=stopLoss=takeProfit=null;reason='Yaxın müqavimət var — risk/gəlir uyğun deyil.'}
+ if(side==='SHORT'&&x.last-x.support<x.a*.65){side='WAIT';score=0;entry=stopLoss=takeProfit=null;reason='Yaxın dəstək var — risk/gəlir uyğun deyil.'}
+ return{symbol,side,score,price:x.last,entry,stopLoss,takeProfit,reason};
+}
+function card(s){return `<article class="sig"><div class="sighead"><div class="coin">${s.symbol}</div><div class="direction ${s.side}">${s.side==='WAIT'?'GÖZLƏ':s.side}</div></div><div class="price">${fmt(s.price)}</div><div class="levels"><div class="level"><span>Giriş</span><b>${s.entry?fmt(s.entry):'—'}</b></div><div class="level"><span>Stop-loss</span><b>${s.stopLoss?fmt(s.stopLoss):'—'}</b></div><div class="level"><span>Take-profit</span><b>${s.takeProfit?fmt(s.takeProfit):'—'}</b></div></div><div class="meta"><span class="confidence">Model balı: ${s.score}/100</span><span>15M · 1H · 5M</span></div><div class="explain">${s.reason}</div></article>`}
+let busy=false;
+async function refresh(){if(busy)return;busy=true;$('refresh').disabled=true;$('live').textContent='Analiz yenilənir…';try{const all=[];for(let i=0;i<COINS.length;i+=4){const batch=await Promise.all(COINS.slice(i,i+4).map(async c=>{try{return await analyze(c)}catch{return null}}));all.push(...batch.filter(Boolean))}all.sort((a,b)=>((b.side!=='WAIT')-(a.side!=='WAIT'))||b.score-a.score);$('signals').innerHTML=all.length?all.map(card).join(''):'<div class="empty">Bazar məlumatı alınmadı. İnternet və API bağlantısını yoxla.</div>';$('summary').textContent=`${all.length}/20 coin analiz edildi · ${all.filter(x=>x.side!=='WAIT').length} aktiv siqnal`;$('live').textContent='Canlı · son yenilənmə '+new Date().toLocaleTimeString('az-AZ')}catch(e){$('live').textContent='Bağlantı xətası'}finally{$('refresh').disabled=false;busy=false}}
+$('refresh').addEventListener('click',refresh);refresh();setInterval(refresh,60000);
+
+const btButton=document.getElementById('runBacktest');
+btButton.addEventListener('click',runBacktest);
+async function getHistory(symbol,days,interval='15m'){
+  const end=Date.now(),start=end-days*86400000,all=[];let cursor=start;const step=interval==='1h'?3600000:900000;
+  while(cursor<end){
+    const u=`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${cursor}&endTime=${end}&limit=1000`;
+    const batch=await get(u);if(!batch.length)break;
+    all.push(...batch);cursor=Number(batch[batch.length-1][0])+step;
+    $('btStatus').textContent=`Tarixi məlumat yüklənir… ${Math.min(100,Math.round((cursor-start)/(end-start)*100))}%`;
+    if(batch.length<1000)break;
+    if(all.length>20000)break;
+  }
+  return all;
+}
+function runSimulation(rows, hourly){
+  // Signal is evaluated using only candles available at that time; entry is next candle open.
+  const trades=[];let i=100;
+  while(i<rows.length-2){
+    const history=rows.slice(Math.max(0,i-100),i),s=stats(history);
+    const prev1=stats(rows.slice(Math.max(0,i-100),i));
+    const ts=Number(rows[i][0]);let hi=0;while(hi+1<hourly.length&&Number(hourly[hi+1][0])<ts)hi++;const hour=stats(hourly.slice(Math.max(0,hi-100),hi+1));
+    const next=rows[i+1],entry=+next[1],atrVal=s.a;
+    let side=null;
+    const long=s.e20>s.e50&&s.last>s.e20&&s.m>0&&s.rv>=52&&s.rv<=68&&hour.e20>hour.e50&&s.vr>=0.8;
+    const short=s.e20<s.e50&&s.last<s.e20&&s.m<0&&s.rv<=48&&s.rv>=32&&hour.e20<hour.e50&&s.vr>=0.8;
+    if(long)side='LONG';else if(short)side='SHORT';
+    if(!side||!Number.isFinite(atrVal)||atrVal<=0){i++;continue}
+    const sup=Math.min(...history.slice(-20).map(r=>+r[3])),res=Math.max(...history.slice(-20).map(r=>+r[2]));
+    let sl=side==='LONG'?Math.min(entry-atrVal*1.5,sup-atrVal*.15):Math.max(entry+atrVal*1.5,res+atrVal*.15);
+    let tp=side==='LONG'?entry+Math.max(atrVal*2.2,(entry-sl)*1.8):entry-Math.max(atrVal*2.2,(sl-entry)*1.8);
+    // Conservative simulation: if SL and TP are both touched in one candle, count SL first.
+    let exit=null,outcome='OPEN',exitIndex=i+1;
+    for(let j=i+1;j<rows.length;j++){
+      const high=+rows[j][2],low=+rows[j][3];
+      if(side==='LONG'){
+        if(low<=sl){exit=sl;outcome='LOSS';exitIndex=j;break}
+        if(high>=tp){exit=tp;outcome='WIN';exitIndex=j;break}
+      }else{
+        if(high>=sl){exit=sl;outcome='LOSS';exitIndex=j;break}
+        if(low<=tp){exit=tp;outcome='WIN';exitIndex=j;break}
+      }
+      if(j-(i+1)>=96){exit=+rows[j][4];outcome='TIME';exitIndex=j;break}
+    }
+    if(exit===null){exit=+rows.at(-1)[4];outcome='TIME';exitIndex=rows.length-1}
+    const raw=side==='LONG'?(exit-entry)/entry*100:(entry-exit)/entry*100;
+    const net=raw-0.2; // estimated 0.1% fee each side, excludes slippage/funding
+    trades.push({side,outcome,net,entry,exit});
+    i=Math.max(i+1,exitIndex+1);
+  }
+  const wins=trades.filter(t=>t.net>0).length,losses=trades.filter(t=>t.net<=0).length;
+  const pnl=trades.reduce((s,t)=>s+t.net,0);
+  return {trades,wins,losses,pnl,winRate:trades.length?wins/trades.length*100:0};
+}
+async function runBacktest(){
+  if(btButton.disabled)return;btButton.disabled=true;
+  $('btResults').style.display='none';
+  $('btStatus').textContent='Tarixi 15 dəqiqəlik şamlar yüklənir…';
+  try{
+    const symbol=document.getElementById('btCoin').value,days=Number(document.getElementById('btDays').value);
+    const [rows,hourly]=await Promise.all([getHistory(symbol,days,'15m'),getHistory(symbol,days,'1h')]);
+    if(rows.length<200||hourly.length<30)throw Error('Yetərli tarixi məlumat gəlmədi.');
+    $('btStatus').textContent='Keçmiş siqnallar hesablanır…';
+    const result=runSimulation(rows,hourly);
+    $('btResults').style.display='block';
+    $('btTrades').textContent=String(result.trades.length);
+    $('btWin').textContent=result.winRate.toFixed(1)+'%';
+    $('btPnl').textContent=(result.pnl>=0?'+':'')+result.pnl.toFixed(2)+'%';
+    $('btPnl').style.color=result.pnl>=0?'var(--green)':'var(--red)';
+    $('btMore').textContent=`${symbol} · ${days} gün · Qazanc nəticəsi: ${result.wins} · Zərər/komissiyadan sonra mənfi: ${result.losses}. *Təxmini nəticə: hər giriş və çıxış üçün 0.1% komissiya nəzərə alınıb; slippage və funding daxil deyil. Bu, sadələşdirilmiş sınaqdır, real nəticə deyil.`;
+    $('btStatus').textContent=`Tamamlandı · ${rows.length} şam yoxlanıldı.`;
+  }catch(e){$('btStatus').textContent='Backtest alınmadı: '+e.message+' İnternet/API bağlantısını yoxla.'}
+  finally{btButton.disabled=false}
+}
+
+</script></body></html>
